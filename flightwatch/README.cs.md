@@ -36,7 +36,8 @@ Volba `auto` znovu použije jazyk serveru.
 | `/flight search <odlet> <cíl> <rok> <měsíc> [měna]` | Najde nejnižší tarif Ryanairu pro měsíc. |
 | `/flight returnsearch <odlet> <cíl> <odlet_od> <odlet_do> <návrat_od> <návrat_do> [měna]` | Najde nejlevnější zpáteční kombinaci v zadaných termínech. Data zadej jako `RRRR-MM-DD`. |
 | `/flight watch <odlet> <cíl> <rok> <měsíc> [měna] [cenový_limit]` | Sleduje měsíční minimum a volitelně hlídá cenový limit. |
-| `/flight returnwatch <odlet> <cíl> <odlet_od> <odlet_do> <návrat_od> <návrat_do> [měna] [cenový_limit]` | Sleduje nejnižší celkovou cenu zpáteční kombinace v zadaných oknech. |
+| `/flight returnwatch <odlet> <cíl> <rok_odletu> <měsíc_odletu> <rok_návratu> <měsíc_návratu> [měna] [limit_celkem]` | Sleduje nejnižší celkovou cenu zpáteční cesty v celých měsících. |
+| `/flight returnwatchdates <odlet> <cíl> <odlet_od> <odlet_do> <návrat_od> <návrat_do> [měna] [limit_celkem]` | Pokročilé: sleduje přesná okna ve formátu `RRRR-MM-DD`. |
 | `/flight watches` | Vypíše sledované trasy na serveru. |
 | `/flight unwatch <id>` | Odebere sledování podle jeho ID. |
 | `/flight check` | Okamžitě zkontroluje sledované ceny. |
@@ -50,7 +51,8 @@ Používej třípísmenné IATA kódy letišť. Příklady:
 /flight search PRG STN 2026 11 EUR
 /flight returnsearch PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR
 /flight watch PRG STN 2026 11 EUR 40
-/flight returnwatch PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR 80
+/flight returnwatch PRG STN 2026 11 2026 12 EUR 80
+/flight returnwatchdates PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR 80
 ```
 
 `search`, `returnsearch` a `explore` jsou nezávazná hledání a nic neukládají. Sledování založí až `watch` nebo `returnwatch`. Zpáteční příkazy porovnávají kompletní kombinace odletu a návratu, nesčítají nesouvisející jednosměrné letenky. Zadaná okna určují možné termíny cesty i délku pobytu. Ceny jsou pro jednoho cestujícího; wrapper neumí spolehlivě ocenit více osob. Sledování se kontrolují každých 30 minut. Upozornění obsahují odkaz na rezervaci, bot letenky nekupuje. Pro kódy použij `/flight airports` nebo [oficiální vyhledávání IATA](https://www.iata.org/en/publications/directories/code-search/).

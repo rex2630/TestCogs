@@ -176,7 +176,56 @@ class FlightWatch(commands.Cog):
         ))
 
     @flight.command(name="returnwatch")
-    async def return_watch(
+    async def return_watch_by_month(
+        self,
+        ctx,
+        origin: str,
+        destination: str,
+        outbound_year: int,
+        outbound_month: int,
+        return_year: int,
+        return_month: int,
+        currency: str = "EUR",
+        max_price: Optional[float] = None,
+    ):
+        """Track the lowest return fare using outbound and return months."""
+        language = await self._get_language(ctx.guild)
+        origin = origin.upper()
+        destination = destination.upper()
+        currency = currency.upper()
+        try:
+            self._validate_route(origin, destination, currency, language)
+            outbound_start, outbound_end = self._get_month_window(
+                outbound_year, outbound_month, language
+            )
+            return_start, return_end = self._get_month_window(
+                return_year, return_month, language
+            )
+            if return_start < outbound_start:
+                raise ValueError(MESSAGES[language]["invalid_return_months"])
+            if max_price is not None and max_price <= 0:
+                raise ValueError(MESSAGES[language]["invalid_limit"])
+            trips = await self._fetch_return_fares(
+                origin, destination, outbound_start, outbound_end,
+                return_start, return_end, currency
+            )
+        except ValueError as exc:
+            error = self._user_error(exc, language, "NO_RETURN_FARES", "no_return_fares")
+            await ctx.send(MESSAGES[language]["watch_failed"].format(error=error))
+            return
+        except Exception:
+            log.exception("Unable to start monthly return fare watch %s -> %s", origin, destination)
+            await ctx.send(MESSAGES[language]["api_error"])
+            return
+
+        await self._save_return_watch(
+            ctx, origin, destination, outbound_start, outbound_end,
+            return_start, return_end, currency, max_price, trips, language,
+            month_based=True,
+        )
+
+    @flight.command(name="returnwatchdates")
+    async def return_watch_dates(
         self,
         ctx,
         origin: str,
@@ -188,7 +237,7 @@ class FlightWatch(commands.Cog):
         currency: str = "EUR",
         max_price: Optional[float] = None,
     ):
-        """Track the lowest combined return fare in the selected date windows."""
+        """Track the lowest combined return fare in exact date windows."""
         language = await self._get_language(ctx.guild)
         origin = origin.upper()
         destination = destination.upper()
@@ -216,6 +265,16 @@ class FlightWatch(commands.Cog):
             await ctx.send(MESSAGES[language]["api_error"])
             return
 
+        await self._save_return_watch(
+            ctx, origin, destination, outbound_start, outbound_end,
+            return_start, return_end, currency, max_price, trips, language,
+        )
+
+    async def _save_return_watch(
+        self, ctx, origin, destination, outbound_start, outbound_end,
+        return_start, return_end, currency, max_price, trips, language,
+        month_based=False,
+    ):
         watches = await self.config.guild(ctx.guild).watches()
         duplicate = any(
             item.get("kind") == "return"
@@ -264,14 +323,25 @@ class FlightWatch(commands.Cog):
             MESSAGES[language]["return_limit_cap"].format(price=max_price, currency=currency)
             if max_price is not None else ""
         )
-        await ctx.send(MESSAGES[language]["return_watch_created"].format(
-            origin=origin, destination=destination,
-            outbound_from=outbound_start.isoformat(), outbound_to=outbound_end.isoformat(),
-            return_from=return_start.isoformat(), return_to=return_end.isoformat(),
-            price=trip.totalPrice, currency=currency, out_date=outbound_date,
-            return_date=return_date, cap=cap, watch_id=watch_id,
-            minutes=CHECK_INTERVAL_MINUTES,
-        ))
+        message_key = "return_watch_month_created" if month_based else "return_watch_created"
+        message_values = {
+            "origin": origin,
+            "destination": destination,
+            "outbound_from": outbound_start.isoformat(),
+            "outbound_to": outbound_end.isoformat(),
+            "return_from": return_start.isoformat(),
+            "return_to": return_end.isoformat(),
+            "price": trip.totalPrice,
+            "currency": currency,
+            "out_date": outbound_date,
+            "return_date": return_date,
+            "cap": cap,
+            "watch_id": watch_id,
+            "minutes": CHECK_INTERVAL_MINUTES,
+            "outbound_period": outbound_start.strftime("%Y-%m"),
+            "return_period": return_start.strftime("%Y-%m"),
+        }
+        await ctx.send(MESSAGES[language][message_key].format(**message_values))
 
     @flight.command(name="watch")
     async def watch(
@@ -440,6 +510,16 @@ class FlightWatch(commands.Cog):
             or any(bound.year < 2024 or bound.year > 2035 for bound in (start, end))
         ):
             raise ValueError(MESSAGES[language]["invalid_date_range"])
+        return start, end
+
+    @staticmethod
+    def _get_month_window(year, month, language):
+        if not 1 <= month <= 12 or not 2024 <= year <= 2035:
+            raise ValueError(MESSAGES[language]["invalid_date"])
+        start = date(year, month, 1)
+        if start < date.today().replace(day=1):
+            raise ValueError(MESSAGES[language]["past_month"])
+        end = date(year, month, monthrange(year, month)[1])
         return start, end
 
     async def _get_language(self, guild):
