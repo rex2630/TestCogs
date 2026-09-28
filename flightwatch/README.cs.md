@@ -2,7 +2,7 @@
 
 [English](README.md) | [Čeština](README.cs.md)
 
-FlightWatch vyhledává nejnižší jednosměrný nebo zpáteční tarif Ryanairu a sleduje nejnižší jednosměrnou cenu pro trasu a kalendářní měsíc. Zpáteční hledání porovnává celé kombinace odletu a návratu v zadaných časových oknech. Do Discordu může poslat upozornění při změně sledované ceny, novém minimu nebo dosažení volitelného cenového limitu. Příkazy fungují jako slash i jako prefix příkazy.
+FlightWatch umí vyhledat tarif Ryanairu bez založení sledování, porovnat nejlevnější lety do více destinací a sledovat jednosměrná i zpáteční cenová minima. Zpáteční hledání a sledování porovnává celé kombinace odletu a návratu v zadaných časových oknech. Do Discordu posílá upozornění při změně ceny, novém minimu nebo dosažení volitelného cenového limitu. Odpovědi, nápověda, validace i upozornění jsou v oddělených českých a anglických locale souborech. Příkazy fungují jako slash i jako prefix příkazy.
 
 ## Instalace
 
@@ -32,30 +32,35 @@ Volba `auto` znovu použije jazyk serveru.
 
 | Příkaz | Popis |
 | --- | --- |
+| `/flight explore <odlet> <od_data> <do_data> [měna]` | Ukáže pět nejlevnějších destinací z letiště. Jen vyhledává, nic neukládá. |
 | `/flight search <odlet> <cíl> <rok> <měsíc> [měna]` | Najde nejnižší tarif Ryanairu pro měsíc. |
 | `/flight returnsearch <odlet> <cíl> <odlet_od> <odlet_do> <návrat_od> <návrat_do> [měna]` | Najde nejlevnější zpáteční kombinaci v zadaných termínech. Data zadej jako `RRRR-MM-DD`. |
 | `/flight watch <odlet> <cíl> <rok> <měsíc> [měna] [cenový_limit]` | Sleduje měsíční minimum a volitelně hlídá cenový limit. |
+| `/flight returnwatch <odlet> <cíl> <odlet_od> <odlet_do> <návrat_od> <návrat_do> [měna] [cenový_limit]` | Sleduje nejnižší celkovou cenu zpáteční kombinace v zadaných oknech. |
 | `/flight watches` | Vypíše sledované trasy na serveru. |
 | `/flight unwatch <id>` | Odebere sledování podle jeho ID. |
 | `/flight check` | Okamžitě zkontroluje sledované ceny. |
+| `/flight airports` | Otevře oficiální vyhledávání letištních IATA kódů. |
 | `/flight language <auto|cs|en>` | Nastaví jazyk odpovědí na serveru. |
 
 Používej třípísmenné IATA kódy letišť. Příklady:
 
 ```text
+/flight explore DUB 2026-10-01 2026-10-07 EUR
 /flight search PRG STN 2026 11 EUR
 /flight returnsearch PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR
 /flight watch PRG STN 2026 11 EUR 40
+/flight returnwatch PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR 80
 ```
 
-Zpáteční hledání vyhodnocuje kompletní kombinace odletu a návratu, nesčítá dvě nesouvisející nejlevnější jednosměrné letenky. Může hledat v pružných časových oknech, ale délku pobytu omezují pouze zadaná okna. Ceny jsou pro jednoho cestujícího; toto API wrapper rozhraní neumí spolehlivě ocenit více osob. Sledování se kontrolují každých 30 minut. Upozornění obsahuje odkaz na rezervaci u Ryanairu. Bot letenky nekupuje.
+`search`, `returnsearch` a `explore` jsou nezávazná hledání a nic neukládají. Sledování založí až `watch` nebo `returnwatch`. Zpáteční příkazy porovnávají kompletní kombinace odletu a návratu, nesčítají nesouvisející jednosměrné letenky. Zadaná okna určují možné termíny cesty i délku pobytu. Ceny jsou pro jednoho cestujícího; wrapper neumí spolehlivě ocenit více osob. Sledování se kontrolují každých 30 minut. Upozornění obsahují odkaz na rezervaci, bot letenky nekupuje. Pro kódy použij `/flight airports` nebo [oficiální vyhledávání IATA](https://www.iata.org/en/publications/directories/code-search/).
 
 ## Rozsah a omezení
 
-Tato verze sleduje pouze jednosměrné tarify Ryanairu. Vyhledávání podporuje jednosměrné i zpáteční itineráře, ale zpáteční ceny zatím nelze sledovat upozorněními. Cog nesleduje každý jednotlivý let ani jiné aerolinky. Skyscanner není součástí, protože jeho Live Prices API vyžaduje partnerský přístup a veřejně garantovaný bezplatný tarif nenabízí.
+Tato verze sleduje pouze Ryanair. Jednosměrné sledování hlídá minimum pro trasu a měsíc; zpáteční sledování hlídá celkovou cenu pro zadaná odletová a návratová okna. Cog nesleduje jednotlivé cenové úrovně sedadel ani jiné aerolinky. Skyscanner není součástí, protože jeho Live Prices API vyžaduje partnerský přístup a veřejně garantovaný bezplatný tarif nenabízí.
 
 Balíček `ryanair-py` používá neoficiální a nedokumentovaná rozhraní Ryanairu. Mohou se změnit, omezovat požadavky nebo vracet cenu odlišnou od konečné částky při rezervaci. Kontrola po 30 minutách není realtime feed. Před nákupem cenu vždy ověř na webu Ryanairu.
 
 ## Ukládaná data
 
-Cog ukládá sledované trasy, měnu, volitelný cenový limit, poslední a nejnižší cenu, ID kanálů pro upozornění a jazyk serveru v Red Configu. Neukládá osobní profilová data.
+Cog ukládá sledované trasy a termínová okna, měnu, volitelný cenový limit, poslední a nejnižší cenu, ID kanálů pro upozornění a jazyk serveru v Red Configu. Neukládá osobní profilová data.

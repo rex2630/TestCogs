@@ -3,7 +3,7 @@
   "author": ["rex2630"],
   "description": "Search one-way and return Ryanair fares, track monthly lows, and receive price alerts in English or Czech.",
   "end_user_data_statement": "This cog stores watched routes, month, currency, optional price limit, recent fare, alert channel ID, and the server's selected language in Red's Config.",
-  "install_msg": "FlightWatch installed. Use /flight search, /flight returnsearch, or /flight watch to get started. Return searches price one traveller. /flight language auto follows the server locale; use cs or en to set it explicitly.\n\nEnglish and Czech documentation: https://github.com/rex2630/TestCogs/tree/main/flightwatch",
+  "install_msg": "FlightWatch installed. Try /flight explore, /flight search, /flight returnsearch, /flight watch, or /flight returnwatch. Use /flight airports for IATA codes. /flight language auto follows the server locale; use cs or en to set it explicitly.\n\nEnglish and Czech documentation: https://github.com/rex2630/TestCogs/tree/main/flightwatch",
   "min_bot_version": "3.5.1",
   "min_python_version": [3, 8, 1],
   "name": "FlightWatch",
