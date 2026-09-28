@@ -61,7 +61,7 @@ class FlightWatch(commands.Cog):
         currency = currency.upper()
         try:
             self._validate_route(origin, None, currency, language)
-            start, end = self._parse_date_window(date_from, date_to, language)
+            start, end = self._parse_period_window(date_from, date_to, language)
             api = await self._get_api(currency)
             flights = await asyncio.to_thread(api.get_cheapest_flights, origin, start, end)
         except ValueError as exc:
@@ -98,15 +98,18 @@ class FlightWatch(commands.Cog):
         ctx,
         origin: str,
         destination: str,
-        year: int,
-        month: int,
+        date_from: str,
+        date_to: str,
         currency: str = "EUR",
     ):
-        """Find the cheapest Ryanair fare in a month (airport IATA codes)."""
+        """Find the cheapest Ryanair fare in a month or exact date range."""
         language = await self._get_language(ctx.guild)
         try:
-            self._validate_search(origin, destination, year, month, currency, language)
-            fares = await self._fetch_fares(origin.upper(), destination.upper(), year, month, currency.upper())
+            self._validate_route(origin, destination, currency, language)
+            start, end = self._parse_period_window(date_from, date_to, language)
+            fares = await self._fetch_fares_between(
+                origin.upper(), destination.upper(), start, end, currency.upper()
+            )
         except ValueError as exc:
             error = self._user_error(exc, language, "NO_FARES", "no_fares")
             await ctx.send(MESSAGES[language]["search_failed"].format(error=error))
@@ -142,10 +145,10 @@ class FlightWatch(commands.Cog):
             destination = destination.upper()
             currency = currency.upper()
             self._validate_route(origin, destination, currency, language)
-            outbound_start, outbound_end = self._parse_date_window(
+            outbound_start, outbound_end = self._parse_period_window(
                 outbound_from, outbound_to, language
             )
-            return_start, return_end = self._parse_date_window(return_from, return_to, language)
+            return_start, return_end = self._parse_period_window(return_from, return_to, language)
             if return_start < outbound_start or return_end < outbound_start:
                 raise ValueError(MESSAGES[language]["invalid_return_dates"])
             trips = await self._fetch_return_fares(
@@ -244,10 +247,10 @@ class FlightWatch(commands.Cog):
         currency = currency.upper()
         try:
             self._validate_route(origin, destination, currency, language)
-            outbound_start, outbound_end = self._parse_date_window(
+            outbound_start, outbound_end = self._parse_period_window(
                 outbound_from, outbound_to, language
             )
-            return_start, return_end = self._parse_date_window(return_from, return_to, language)
+            return_start, return_end = self._parse_period_window(return_from, return_to, language)
             if return_start < outbound_start or return_end < outbound_start:
                 raise ValueError(MESSAGES[language]["invalid_return_dates"])
             if max_price is not None and max_price <= 0:
@@ -498,18 +501,32 @@ class FlightWatch(commands.Cog):
             raise ValueError(messages["past_month"])
 
     @staticmethod
-    def _parse_date_window(date_from, date_to, language):
+    def _parse_period_window(date_from, date_to, language):
+        month_format = re.compile(r"^\d{4}-\d{2}$")
+        start_is_month = bool(month_format.fullmatch(date_from))
+        end_is_month = bool(month_format.fullmatch(date_to))
+        if start_is_month != end_is_month:
+            raise ValueError(MESSAGES[language]["invalid_period_format"])
+
         try:
-            start = date.fromisoformat(date_from)
-            end = date.fromisoformat(date_to)
+            if start_is_month:
+                start_year, start_month = map(int, date_from.split("-"))
+                end_year, end_month = map(int, date_to.split("-"))
+                start = date(start_year, start_month, 1)
+                end = date(end_year, end_month, monthrange(end_year, end_month)[1])
+            else:
+                start = date.fromisoformat(date_from)
+                end = date.fromisoformat(date_to)
         except ValueError as exc:
-            raise ValueError(MESSAGES[language]["invalid_date_range"]) from exc
+            key = "invalid_period_format" if start_is_month else "invalid_date_range"
+            raise ValueError(MESSAGES[language][key]) from exc
         if (
             start > end
             or start < date.today()
             or any(bound.year < 2024 or bound.year > 2035 for bound in (start, end))
         ):
-            raise ValueError(MESSAGES[language]["invalid_date_range"])
+            key = "invalid_period_format" if start_is_month else "invalid_date_range"
+            raise ValueError(MESSAGES[language][key])
         return start, end
 
     @staticmethod
@@ -545,9 +562,12 @@ class FlightWatch(commands.Cog):
         return self._apis[currency]
 
     async def _fetch_fares(self, origin, destination, year, month, currency):
-        api = await self._get_api(currency)
         date_from = date(year, month, 1)
         date_to = date(year, month, monthrange(year, month)[1])
+        return await self._fetch_fares_between(origin, destination, date_from, date_to, currency)
+
+    async def _fetch_fares_between(self, origin, destination, date_from, date_to, currency):
+        api = await self._get_api(currency)
         flights = await asyncio.to_thread(
             api.get_cheapest_flights,
             origin,

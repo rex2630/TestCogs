@@ -1,5 +1,5 @@
 {
-  "help": "**FlightWatch — příkazy**\n\n**Jen vyhledat, bez uložení:**\n`/flight search <odlet> <cíl> <rok> <měsíc> [měna]`\n`/flight returnsearch <odlet> <cíl> <odlet-od> <odlet-do> <návrat-od> <návrat-do> [měna]`\n`/flight explore <odlet> <od-data> <do-data> [měna]`\n\n**Upozornění na cenu:**\n`/flight watch <odlet> <cíl> <rok> <měsíc> [měna] [limit]`\n`/flight returnwatch <odlet> <cíl> <rok-odletu> <měsíc-odletu> <rok-návratu> <měsíc-návratu> [měna] [limit-celkem]`\n\nPřesné termíny zpátečního sledování: `/flight returnwatchdates <odlet> <cíl> <odlet-od> <odlet-do> <návrat-od> <návrat-do>`.\nSpráva: `/flight watches`, `/flight unwatch <id>`, `/flight check`.\nIATA kódy: `/flight airports`. Jazyk: `/flight language <auto|cs|en>`.",
+  "help": "**FlightWatch — příkazy**\n\n**Jen vyhledat, bez uložení:**\n`/flight search <odlet> <cíl> <od> <do> [měna]`\n`/flight returnsearch <odlet> <cíl> <odlet-od> <odlet-do> <návrat-od> <návrat-do> [měna]`\n`/flight explore <odlet> <od> <do> [měna]`\n\n**Upozornění na cenu:**\n`/flight watch <odlet> <cíl> <rok> <měsíc> [měna] [limit]`\n`/flight returnwatch <odlet> <cíl> <rok-odletu> <měsíc-odletu> <rok-návratu> <měsíc-návratu> [měna] [limit-celkem]`\n`/flight returnwatchdates <odlet> <cíl> <odlet-od> <odlet-do> <návrat-od> <návrat-do> [měna] [limit-celkem]`\n\nU `<od>` a `<do>` zadej oba měsíce jako `RRRR-MM`, nebo obě přesná data jako `RRRR-MM-DD`.\nSpráva: `/flight watches`, `/flight unwatch <id>`, `/flight check`. IATA kódy: `/flight airports`. Jazyk: `/flight language <auto|cs|en>`.",
   "search_failed": "Vyhledávání se nepodařilo: {error}",
   "search_result": "Nejnižší cena: **{price:.2f} {currency}** ({origin} → {destination}, {date}).\n{url}",
   "return_search_result": "Nejlevnější zpáteční cesta: **celkem {total:.2f} {currency}**\nOdlet: {origin} → {destination}, {out_date} — {out_price:.2f} {currency}\nNávrat: {destination} → {origin}, {return_date} — {return_price:.2f} {currency}\n{url}",
@@ -33,6 +33,7 @@
   "same_airport": "Odletové a cílové letiště musí být rozdílné.",
   "invalid_date": "Rok nebo měsíc je mimo podporovaný rozsah.",
   "invalid_date_range": "Zadej platné budoucí časové okno ve formátu RRRR-MM-DD v podporovaném rozsahu let.",
+  "invalid_period_format": "Zadej oba okraje buď jako měsíce RRRR-MM, nebo jako přesná data RRRR-MM-DD; formáty nemíchej.",
   "past_month": "Nelze hledat měsíc, který už začal v minulosti.",
   "invalid_currency": "Měna musí být třípísmenný kód, například EUR nebo GBP.",
   "no_fares": "Ryanair pro tuto trasu a měsíc nevrátil žádné tarify.",

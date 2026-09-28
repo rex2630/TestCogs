@@ -32,12 +32,12 @@ By default, the cog follows the server's preferred locale: Czech servers use Cze
 
 | Command | Description |
 | --- | --- |
-| `/flight explore <origin> <from> <to> [currency]` | Show the five cheapest destinations from an airport. Search only; nothing is saved. |
-| `/flight search <origin> <destination> <year> <month> [currency]` | Find the lowest Ryanair fare for a month. |
-| `/flight returnsearch <origin> <destination> <outbound_from> <outbound_to> <return_from> <return_to> [currency]` | Find the lowest combined return fare in the supplied date windows. Dates use `YYYY-MM-DD`. |
+| `/flight explore <origin> <from> <to> [currency]` | Show five cheapest destinations. Each bound pair can use months (`YYYY-MM`) or exact dates (`YYYY-MM-DD`). |
+| `/flight search <origin> <destination> <from> <to> [currency]` | Find the lowest fare for a month or exact date range. |
+| `/flight returnsearch <origin> <destination> <outbound_from> <outbound_to> <return_from> <return_to> [currency]` | Find the lowest combined return fare. Each window can use months or exact dates. |
 | `/flight watch <origin> <destination> <year> <month> [currency] [max_price]` | Track the monthly low and optionally alert at a price limit. |
 | `/flight returnwatch <origin> <destination> <outbound_year> <outbound_month> <return_year> <return_month> [currency] [max_price]` | Track the lowest total return fare across the selected calendar months. |
-| `/flight returnwatchdates <origin> <destination> <outbound_from> <outbound_to> <return_from> <return_to> [currency] [max_price]` | Advanced: track exact outbound and return date windows (`YYYY-MM-DD`). |
+| `/flight returnwatchdates <origin> <destination> <outbound_from> <outbound_to> <return_from> <return_to> [currency] [max_price]` | Track a return fare using month bounds or exact date bounds. |
 | `/flight watches` | List this server's tracked routes. |
 | `/flight unwatch <id>` | Remove a watch by its ID. |
 | `/flight check` | Check tracked prices immediately. |
@@ -47,13 +47,17 @@ By default, the cog follows the server's preferred locale: Czech servers use Cze
 Use three-letter IATA airport codes. Examples:
 
 ```text
+/flight explore DUB 2026-10 2026-11 EUR
 /flight explore DUB 2026-10-01 2026-10-07 EUR
-/flight search PRG STN 2026 11 EUR
+/flight search PRG STN 2026-11 2026-11 EUR
+/flight search PRG STN 2026-11-14 2026-11-14 EUR
 /flight returnsearch PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR
 /flight watch PRG STN 2026 11 EUR 40
 /flight returnwatch PRG STN 2026 11 2026 12 EUR 80
 /flight returnwatchdates PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR 80
 ```
+
+For every `<from>`/`<to>` window, use either two months (`YYYY-MM`) or two exact dates (`YYYY-MM-DD`). Do not mix the two formats within one window.
 
 `search`, `returnsearch`, and `explore` are non-persistent searches. Only `watch` and `returnwatch` save a tracker. Return commands evaluate complete outbound-and-inbound combinations, rather than adding unrelated one-way fares; the supplied windows control the possible travel dates and stay length. Prices are for one traveller because this API wrapper does not expose reliable passenger-count pricing. Watches are checked every 30 minutes. Alerts include a Ryanair booking link. The bot does not purchase tickets. Use `/flight airports` for IATA codes or [IATA's official code search](https://www.iata.org/en/publications/directories/code-search/).
 
