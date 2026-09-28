@@ -19,6 +19,10 @@ MESSAGES = {
     "en": {
         "search_failed": "Search failed: {error}",
         "search_result": "Lowest fare: **{price:.2f} {currency}** ({origin} → {destination}, {date}).\n{url}",
+        "return_search_result": "Cheapest return trip: **{total:.2f} {currency} total**\nOutbound: {origin} → {destination}, {out_date} — {out_price:.2f} {currency}\nReturn: {destination} → {origin}, {return_date} — {return_price:.2f} {currency}\n{url}",
+        "return_search_failed": "Return search failed: {error}",
+        "invalid_return_dates": "Enter valid ISO dates (YYYY-MM-DD) and make sure the return window does not start before the outbound window.",
+        "no_return_fares": "Ryanair returned no matching return trips for those date windows.",
         "invalid_limit": "The price limit must be greater than zero.",
         "watch_failed": "Could not start fare tracking: {error}",
         "duplicate": "This route and month are already being tracked in this channel.",
@@ -46,6 +50,10 @@ MESSAGES = {
     "cs": {
         "search_failed": "Vyhledávání se nepodařilo: {error}",
         "search_result": "Nejnižší cena: **{price:.2f} {currency}** ({origin} → {destination}, {date}).\n{url}",
+        "return_search_result": "Nejlevnější zpáteční cesta: **celkem {total:.2f} {currency}**\nOdlet: {origin} → {destination}, {out_date} — {out_price:.2f} {currency}\nNávrat: {destination} → {origin}, {return_date} — {return_price:.2f} {currency}\n{url}",
+        "return_search_failed": "Vyhledávání zpáteční cesty se nepodařilo: {error}",
+        "invalid_return_dates": "Zadej platná data ve formátu RRRR-MM-DD a začátek návratu nesmí být před začátkem odletového okna.",
+        "no_return_fares": "Ryanair pro zadaná časová okna nenašel odpovídající zpáteční lety.",
         "invalid_limit": "Cenový limit musí být vyšší než nula.",
         "watch_failed": "Sledování ceny se nepodařilo založit: {error}",
         "duplicate": "Tuto trasu a měsíc už v tomto kanálu sleduješ.",
@@ -74,7 +82,7 @@ MESSAGES = {
 
 
 class FlightWatch(commands.Cog):
-    """Track Ryanair monthly fares and post price changes to Discord."""
+    """Search Ryanair one-way and return fares and track monthly lows."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -120,6 +128,66 @@ class FlightWatch(commands.Cog):
         await ctx.send(MESSAGES[language]["search_result"].format(
             price=fare["price"], currency=currency.upper(), origin=origin.upper(),
             destination=destination.upper(), date=fare["date"], url=booking_url
+        ))
+
+    @flight.command(name="returnsearch")
+    async def return_search(
+        self,
+        ctx,
+        origin: str,
+        destination: str,
+        outbound_from: str,
+        outbound_to: str,
+        return_from: str,
+        return_to: str,
+        currency: str = "EUR",
+    ):
+        """Find the cheapest combined return fare within four ISO date bounds."""
+        language = await self._get_language(ctx.guild)
+        try:
+            origin = origin.upper()
+            destination = destination.upper()
+            currency = currency.upper()
+            self._validate_search(origin, destination, date.today().year, date.today().month, currency, language)
+            try:
+                outbound_start = date.fromisoformat(outbound_from)
+                outbound_end = date.fromisoformat(outbound_to)
+                return_start = date.fromisoformat(return_from)
+                return_end = date.fromisoformat(return_to)
+            except ValueError as exc:
+                raise ValueError(MESSAGES[language]["invalid_return_dates"]) from exc
+            if (
+                outbound_start > outbound_end
+                or return_start > return_end
+                or outbound_start < date.today()
+                or return_start < outbound_start
+                or return_end < outbound_start
+                or any(bound.year < 2024 or bound.year > 2035 for bound in (
+                    outbound_start, outbound_end, return_start, return_end
+                ))
+            ):
+                raise ValueError(MESSAGES[language]["invalid_return_dates"])
+            trips = await self._fetch_return_fares(
+                origin, destination, outbound_start, outbound_end,
+                return_start, return_end, currency
+            )
+        except Exception as exc:
+            error = MESSAGES[language]["no_return_fares"] if str(exc) == "NO_RETURN_FARES" else str(exc)
+            await ctx.send(MESSAGES[language]["return_search_failed"].format(error=error))
+            return
+
+        trip = min(trips, key=lambda candidate: candidate.totalPrice)
+        booking_url = self._booking_url(
+            origin, destination, trip.outbound.departureTime.date().isoformat(),
+            trip.inbound.departureTime.date().isoformat(),
+        )
+        await ctx.send(MESSAGES[language]["return_search_result"].format(
+            total=trip.totalPrice, currency=trip.outbound.currency,
+            origin=origin, destination=destination,
+            out_date=trip.outbound.departureTime.date().isoformat(),
+            out_price=trip.outbound.price,
+            return_date=trip.inbound.departureTime.date().isoformat(),
+            return_price=trip.inbound.price, url=booking_url,
         ))
 
     @flight.command(name="watch")
@@ -291,8 +359,26 @@ class FlightWatch(commands.Cog):
             raise ValueError("NO_FARES")
         return fares
 
+    async def _fetch_return_fares(
+        self, origin, destination, outbound_start, outbound_end,
+        return_start, return_end, currency,
+    ):
+        api = await self._get_api(currency)
+        trips = await asyncio.to_thread(
+            api.get_cheapest_return_flights,
+            origin,
+            outbound_start,
+            outbound_end,
+            return_start,
+            return_end,
+            destination_airport=destination,
+        )
+        if not trips:
+            raise ValueError("NO_RETURN_FARES")
+        return trips
+
     @staticmethod
-    def _booking_url(origin, destination, departure):
+    def _booking_url(origin, destination, departure, return_date=None):
         query = urlencode(
             {
                 "adults": 1,
@@ -300,7 +386,7 @@ class FlightWatch(commands.Cog):
                 "children": 0,
                 "infants": 0,
                 "dateOut": departure,
-                "dateIn": "",
+                "dateIn": return_date or "",
                 "isConnectedFlight": "false",
                 "discount": 0,
                 "promoCode": "",

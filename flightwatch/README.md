@@ -2,7 +2,7 @@
 
 [English](README.md) | [Čeština](README.cs.md)
 
-FlightWatch searches and tracks Ryanair's lowest one-way fare for a route and a calendar month. It can post an alert to Discord when the fare changes, reaches a new low, or crosses an optional price limit. Commands work as both prefix and slash commands.
+FlightWatch searches Ryanair's lowest one-way or return fare and tracks the lowest one-way fare for a route and a calendar month. Return searches compare complete outbound and inbound combinations within the date windows you provide. It can post an alert to Discord when a tracked fare changes, reaches a new low, or crosses an optional price limit. Commands work as both prefix and slash commands.
 
 ## Installation
 
@@ -33,6 +33,7 @@ By default, the cog follows the server's preferred locale: Czech servers use Cze
 | Command | Description |
 | --- | --- |
 | `/flight search <origin> <destination> <year> <month> [currency]` | Find the lowest Ryanair fare for a month. |
+| `/flight returnsearch <origin> <destination> <outbound_from> <outbound_to> <return_from> <return_to> [currency]` | Find the lowest combined return fare in the supplied date windows. Dates use `YYYY-MM-DD`. |
 | `/flight watch <origin> <destination> <year> <month> [currency] [max_price]` | Track the monthly low and optionally alert at a price limit. |
 | `/flight watches` | List this server's tracked routes. |
 | `/flight unwatch <id>` | Remove a watch by its ID. |
@@ -43,14 +44,15 @@ Use three-letter IATA airport codes. Examples:
 
 ```text
 /flight search PRG STN 2026 11 EUR
+/flight returnsearch PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR
 /flight watch PRG STN 2026 11 EUR 40
 ```
 
-Watches are checked every 30 minutes. Alerts include a Ryanair booking link. The bot does not purchase tickets.
+The return search evaluates complete outbound-and-inbound combinations, rather than adding the cheapest unrelated one-way fares. It can search flexible outbound and return windows, but does not impose a stay length beyond those windows. Prices are for one traveller; this API wrapper does not expose reliable passenger-count pricing. Watches are checked every 30 minutes. Alerts include a Ryanair booking link. The bot does not purchase tickets.
 
 ## Scope and limitations
 
-This version tracks Ryanair only. It finds the cheapest fare returned for a route and month; it does not monitor every individual flight, return itineraries, or other airlines. Skyscanner is not included because its Live Prices API requires partner access and does not offer a publicly guaranteed free tier.
+This version tracks Ryanair one-way fares only. Search supports both one-way and return itineraries, but return fares are not yet tracked by alerts. It does not monitor every individual flight or other airlines. Skyscanner is not included because its Live Prices API requires partner access and does not offer a publicly guaranteed free tier.
 
 `ryanair-py` uses Ryanair's unofficial, undocumented endpoints. They may change, rate-limit requests, or return a price that differs from the final booking price. A 30-minute polling interval is not a real-time feed. Always verify the fare on Ryanair before booking.
 
