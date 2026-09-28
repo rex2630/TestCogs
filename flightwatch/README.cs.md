@@ -34,7 +34,8 @@ Volba `auto` znovu použije jazyk serveru.
 | --- | --- |
 | `/flight explore <odlet> <od> <do> [měna]` | Ukáže pět nejlevnějších destinací. Hranice zadej jako měsíce (`RRRR-MM`) nebo přesná data (`RRRR-MM-DD`). |
 | `/flight search <odlet> <cíl> <od> <do> [měna]` | Najde nejnižší tarif za měsíc nebo přesné datumové okno. |
-| `/flight returnsearch <odlet> <cíl> <odlet_od> <odlet_do> <návrat_od> <návrat_do> [měna]` | Najde nejlevnější zpáteční kombinaci; okna mohou být měsíční nebo přesná. |
+| `/flight returnsearch <odlet> <cíl> <odlet> <návrat> [měna]` | Najde nejlevnější zpáteční kombinaci. Každý úsek může být měsíc (`RRRR-MM`) nebo přesné datum (`RRRR-MM-DD`). |
+| `/flight returnsearchdates <odlet> <cíl> <odlet_od> <odlet_do> <návrat_od> <návrat_do> [měna]` | Hledá v pružných oknech. Každé okno může být dvojice měsíců nebo přesných dat. |
 | `/flight watch <odlet> <cíl> <rok> <měsíc> [měna] [cenový_limit]` | Sleduje měsíční minimum a volitelně hlídá cenový limit. |
 | `/flight returnwatch <odlet> <cíl> <rok_odletu> <měsíc_odletu> <rok_návratu> <měsíc_návratu> [měna] [limit_celkem]` | Sleduje nejnižší celkovou cenu zpáteční cesty v celých měsících. |
 | `/flight returnwatchdates <odlet> <cíl> <odlet_od> <odlet_do> <návrat_od> <návrat_do> [měna] [limit_celkem]` | Sleduje zpáteční cenu s měsíčními nebo přesnými hranicemi. |
@@ -51,7 +52,9 @@ Používej třípísmenné IATA kódy letišť. Příklady:
 /flight explore DUB 2026-10-01 2026-10-07 EUR
 /flight search PRG STN 2026-11 2026-11 EUR
 /flight search PRG STN 2026-11-14 2026-11-14 EUR
-/flight returnsearch PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR
+/flight returnsearch PRG STN 2026-11 2026-12 EUR
+/flight returnsearch PRG STN 2026-11-14 2026-12-02 EUR
+/flight returnsearchdates PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR
 /flight watch PRG STN 2026 11 EUR 40
 /flight returnwatch PRG STN 2026 11 2026 12 EUR 80
 /flight returnwatchdates PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR 80

@@ -132,13 +132,45 @@ class FlightWatch(commands.Cog):
         ctx,
         origin: str,
         destination: str,
+        outbound_period: str,
+        return_period: str,
+        currency: str = "EUR",
+    ):
+        """Find the cheapest return fare using one month or date for each leg."""
+        language = await self._get_language(ctx.guild)
+        try:
+            origin = origin.upper()
+            destination = destination.upper()
+            currency = currency.upper()
+            self._validate_route(origin, destination, currency, language)
+            outbound_start, outbound_end = self._parse_period_window(
+                outbound_period, outbound_period, language
+            )
+            return_start, return_end = self._parse_period_window(
+                return_period, return_period, language
+            )
+        except ValueError as exc:
+            await ctx.send(MESSAGES[language]["return_search_failed"].format(error=exc))
+            return
+
+        await self._send_return_search(
+            ctx, origin, destination, outbound_start, outbound_end,
+            return_start, return_end, currency, language,
+        )
+
+    @flight.command(name="returnsearchdates")
+    async def return_search_dates(
+        self,
+        ctx,
+        origin: str,
+        destination: str,
         outbound_from: str,
         outbound_to: str,
         return_from: str,
         return_to: str,
         currency: str = "EUR",
     ):
-        """Find the cheapest combined return fare within four ISO date bounds."""
+        """Find a return fare across flexible outbound and return windows."""
         language = await self._get_language(ctx.guild)
         try:
             origin = origin.upper()
@@ -148,12 +180,33 @@ class FlightWatch(commands.Cog):
             outbound_start, outbound_end = self._parse_period_window(
                 outbound_from, outbound_to, language
             )
-            return_start, return_end = self._parse_period_window(return_from, return_to, language)
-            if return_start < outbound_start or return_end < outbound_start:
-                raise ValueError(MESSAGES[language]["invalid_return_dates"])
+            return_start, return_end = self._parse_period_window(
+                return_from, return_to, language
+            )
+        except ValueError as exc:
+            await ctx.send(MESSAGES[language]["return_search_failed"].format(error=exc))
+            return
+
+        await self._send_return_search(
+            ctx, origin, destination, outbound_start, outbound_end,
+            return_start, return_end, currency, language,
+        )
+
+    async def _send_return_search(
+        self, ctx, origin, destination, outbound_start, outbound_end,
+        return_start, return_end, currency, language,
+    ):
+        if return_start < outbound_start:
+            await ctx.send(
+                MESSAGES[language]["return_search_failed"].format(
+                    error=MESSAGES[language]["invalid_return_dates"]
+                )
+            )
+            return
+        try:
             trips = await self._fetch_return_fares(
                 origin, destination, outbound_start, outbound_end,
-                return_start, return_end, currency
+                return_start, return_end, currency,
             )
         except ValueError as exc:
             error = self._user_error(exc, language, "NO_RETURN_FARES", "no_return_fares")
@@ -165,16 +218,13 @@ class FlightWatch(commands.Cog):
             return
 
         trip = min(trips, key=lambda candidate: candidate.totalPrice)
-        booking_url = self._booking_url(
-            origin, destination, trip.outbound.departureTime.date().isoformat(),
-            trip.inbound.departureTime.date().isoformat(),
-        )
+        outbound_date = trip.outbound.departureTime.date().isoformat()
+        return_date = trip.inbound.departureTime.date().isoformat()
+        booking_url = self._booking_url(origin, destination, outbound_date, return_date)
         await ctx.send(MESSAGES[language]["return_search_result"].format(
             total=trip.totalPrice, currency=trip.outbound.currency,
-            origin=origin, destination=destination,
-            out_date=trip.outbound.departureTime.date().isoformat(),
-            out_price=trip.outbound.price,
-            return_date=trip.inbound.departureTime.date().isoformat(),
+            origin=origin, destination=destination, out_date=outbound_date,
+            out_price=trip.outbound.price, return_date=return_date,
             return_price=trip.inbound.price, url=booking_url,
         ))
 

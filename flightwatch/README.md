@@ -34,7 +34,8 @@ By default, the cog follows the server's preferred locale: Czech servers use Cze
 | --- | --- |
 | `/flight explore <origin> <from> <to> [currency]` | Show five cheapest destinations. Each bound pair can use months (`YYYY-MM`) or exact dates (`YYYY-MM-DD`). |
 | `/flight search <origin> <destination> <from> <to> [currency]` | Find the lowest fare for a month or exact date range. |
-| `/flight returnsearch <origin> <destination> <outbound_from> <outbound_to> <return_from> <return_to> [currency]` | Find the lowest combined return fare. Each window can use months or exact dates. |
+| `/flight returnsearch <origin> <destination> <outbound> <return> [currency]` | Find the cheapest return pair. Each leg can be one month (`YYYY-MM`) or one exact date (`YYYY-MM-DD`). |
+| `/flight returnsearchdates <origin> <destination> <outbound_from> <outbound_to> <return_from> <return_to> [currency]` | Search flexible outbound and return windows. Each window can use two months or two exact dates. |
 | `/flight watch <origin> <destination> <year> <month> [currency] [max_price]` | Track the monthly low and optionally alert at a price limit. |
 | `/flight returnwatch <origin> <destination> <outbound_year> <outbound_month> <return_year> <return_month> [currency] [max_price]` | Track the lowest total return fare across the selected calendar months. |
 | `/flight returnwatchdates <origin> <destination> <outbound_from> <outbound_to> <return_from> <return_to> [currency] [max_price]` | Track a return fare using month bounds or exact date bounds. |
@@ -51,7 +52,9 @@ Use three-letter IATA airport codes. Examples:
 /flight explore DUB 2026-10-01 2026-10-07 EUR
 /flight search PRG STN 2026-11 2026-11 EUR
 /flight search PRG STN 2026-11-14 2026-11-14 EUR
-/flight returnsearch PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR
+/flight returnsearch PRG STN 2026-11 2026-12 EUR
+/flight returnsearch PRG STN 2026-11-14 2026-12-02 EUR
+/flight returnsearchdates PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR
 /flight watch PRG STN 2026 11 EUR 40
 /flight returnwatch PRG STN 2026 11 2026 12 EUR 80
 /flight returnwatchdates PRG STN 2026-11-01 2026-11-10 2026-11-05 2026-11-20 EUR 80
