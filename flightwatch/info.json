@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Cog-Creators/Red-DiscordBot/V3/develop/schema/red_cog.schema.json",
+  "author": ["rex2630"],
+  "description": "Search and track Ryanair's lowest monthly fares with Discord alerts in English or Czech.",
+  "end_user_data_statement": "This cog stores watched routes, month, currency, optional price limit, recent fare, alert channel ID, and the server's selected language in Red's Config.",
+  "install_msg": "FlightWatch installed. Use /flight search or /flight watch to get started. /flight language auto follows the server locale; use cs or en to set it explicitly.\n\nEnglish and Czech documentation: https://github.com/rex2630/TestCogs/tree/main/flightwatch",
+  "min_bot_version": "3.5.1",
+  "min_python_version": [3, 8, 1],
+  "name": "FlightWatch",
+  "requirements": ["ryanair-py==3.0.0"],
+  "short": "Track Ryanair monthly fares and receive price alerts.",
+  "tags": ["flights", "ryanair", "prices"],
+  "type": "COG"
+}

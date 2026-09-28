@@ -1,0 +1,1 @@
+from .flightwatch import setup
