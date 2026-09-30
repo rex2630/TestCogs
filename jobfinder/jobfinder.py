@@ -11,6 +11,7 @@ import aiohttp
 import discord
 from bs4 import BeautifulSoup
 from redbot.core import Config, commands
+from redbot.core.data_manager import cog_data_path
 from discord.ext import tasks
 
 log = logging.getLogger("red.jobfinder")
@@ -59,7 +60,7 @@ class JobFinder(commands.Cog):
         self.db.close()
 
     def data_path(self):
-        path = self.bot.get_cog_data_path(self.__class__.__name__.lower())
+        path = cog_data_path(self)
         path.mkdir(parents=True, exist_ok=True)
         return path
 
