@@ -12,6 +12,16 @@ JobFinder gathers listings from Czech public APIs, international job APIs, and c
 [p]load jobfinder
 ```
 
+Red does not publish third-party slash commands automatically. As the bot owner, enable the groups and sync them once (replace `?` with your bot's prefix):
+
+```text
+?slash enable jobset slash
+?slash enable job slash
+?slash sync <server>
+```
+
+Then use `/jobset channel` and select the channel from Discord's channel picker; do not type `#job-news` as literal text. If commands still do not appear, check `?slash list` and restart the Discord client.
+
 ## Sources and update cadence
 
 These sources are enabled by default:

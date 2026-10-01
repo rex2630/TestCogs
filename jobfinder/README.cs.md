@@ -12,6 +12,16 @@ JobFinder sbírá nabídky z českých veřejných API, mezinárodních pracovn�
 [p]load jobfinder
 ```
 
+Red slash příkazy cizích cogů automaticky nezveřejňuje. Jako vlastník bota povol skupiny a jednou je synchronizuj (nahraď `?` prefixem svého bota):
+
+```text
+?slash enable jobset slash
+?slash enable job slash
+?slash sync <server>
+```
+
+Potom použij `/jobset channel` a vyber kanál z Discord nabídky; `#job-news` se u slash příkazu nepíše jako běžný text. Pokud se příkazy stále nezobrazují, zkontroluj `?slash list` a restartuj Discord klienta.
+
 ## Zdroje a četnost kontrol
 
 Ve výchozím stavu jsou zapnuté tyto zdroje:
