@@ -11,7 +11,8 @@ from urllib.parse import urlparse
 import aiohttp
 import discord
 from bs4 import BeautifulSoup
-from redbot.core import Config, commands, tasks
+from discord.ext import tasks
+from redbot.core import Config, commands
 
 log = logging.getLogger("red.jobfinder")
 
