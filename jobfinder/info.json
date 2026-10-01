@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Cog-Creators/Red-DiscordBot/V3/develop/schema/red_cog.schema.json",
+  "author": ["rex2630"],
+  "description": "Find jobs from Czech and international APIs and RSS feeds, match private user profiles, and publish localized embed alerts.",
+  "end_user_data_statement": "This cog stores users' job preferences, alert settings and delivery history, server sources and news settings, and normalized job listings in Red Config and a local SQLite database.",
+  "install_msg": "JobFinder installed. Run /job preferences to edit private filters and alert frequency. Administrators can configure a public news channel with /jobset channel and /jobset news.",
+  "min_bot_version": "3.5.1",
+  "min_python_version": [3, 8, 1],
+  "name": "JobFinder",
+  "requirements": ["aiohttp", "beautifulsoup4", "lxml"],
+  "short": "Match job listings and get private alerts.",
+  "tags": ["jobs", "careers", "alerts"],
+  "type": "COG"
+}
